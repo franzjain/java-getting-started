@@ -3,21 +3,30 @@ package com.franz.max2.parser;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 import org.supercsv.io.CsvListReader;
 import org.supercsv.io.ICsvListReader;
 import org.supercsv.prefs.CsvPreference;
 
 import com.franz.max2.model.People;
+import com.franz.max2.model.PeopleSummaryCC;
+import com.franz.max2.model.PeopleSummaryCCN;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
-@Resource
+@Component
 public class PeopleParser {
 	
 	private static Logger logger = LoggerFactory.getLogger(PeopleParser.class);
@@ -61,6 +70,101 @@ public class PeopleParser {
 		this.pvs = pvs1;
 	}
 	
+	public void printPeopleAssignment4(List<People> ppl) {
+		Map<String, Set<People>> pplColorIndex = indexPeopleByColor(ppl);
+		
+		System.out.println();
+		System.out.println("===================================================================================");
+		System.out.println("Result of Assignment 4");
+		System.out.println("===================================================================================");
+		System.out.println();
+		
+		for(Entry<String, Set<People>> entry: pplColorIndex.entrySet()) {
+			System.out.println(String.format("%-8s  %3s", entry.getKey(), entry.getValue().size()));
+		}
+	}
+	
+	public void printPeopleAssignment5(List<People> ppl) {
+		Map<String, Set<People>> pplColorIndex = indexPeopleByColor(ppl);
+		
+		System.out.println();
+		System.out.println("===================================================================================");
+		System.out.println("Result of Assignment 5");
+		System.out.println("===================================================================================");
+		System.out.println();
+		
+		for(Entry<String, Set<People>> entry: pplColorIndex.entrySet()) {
+			System.out.println(String.format("%-8s  %3s  %s", entry.getKey(), entry.getValue().size(), extractFullname(entry.getValue())));
+		}
+	}
+	
+	public void printPeopleAssignment6(List<People> ppl) {
+		
+		System.out.println();
+		System.out.println("===================================================================================");
+		System.out.println("Result of Assignment 6 - question4 reply in Json");
+		System.out.println("===================================================================================");
+		System.out.println();
+		
+		System.out.println(this.getPeopleSummaryCCJSON(ppl));
+		
+		System.out.println();
+		System.out.println("===================================================================================");
+		System.out.println("Result of Assignment 6 - question5 reply in Json");
+		System.out.println("===================================================================================");
+		System.out.println();
+		
+		System.out.println(this.getPeopleSummaryCCNJSON(ppl));
+	}
+	
+	public String getPeopleSummaryCCJSON(List<People> ppl) {
+		Map<String, Set<People>> indexedPpl = this.indexPeopleByColor(ppl);
+		List<PeopleSummaryCC> ccList = new ArrayList<>();
+		for(Entry<String, Set<People>> entry: indexedPpl.entrySet()) {
+			PeopleSummaryCC pscc = new PeopleSummaryCC();
+			pscc.setColor(entry.getKey());
+			pscc.setCount(entry.getValue().size());
+			ccList.add(pscc);
+		}
+		Gson gson = new GsonBuilder().create();
+		return gson.toJson(ccList.toArray(new PeopleSummaryCC[0]));
+	}
+	
+	public String getPeopleSummaryCCNJSON(List<People> ppl) {
+		Map<String, Set<People>> indexedPpl = this.indexPeopleByColor(ppl);
+		List<PeopleSummaryCCN> ccnList = new ArrayList<>();
+		for(Entry<String, Set<People>> entry: indexedPpl.entrySet()) {
+			PeopleSummaryCCN psccn = new PeopleSummaryCCN();
+			psccn.setColor(entry.getKey());
+			psccn.setCount(entry.getValue().size());
+			psccn.setNames(this.extractFullname(entry.getValue()).toArray(new String[0]));
+			ccnList.add(psccn);
+		}
+		Gson gson = new GsonBuilder().create();
+		return gson.toJson(ccnList.toArray(new PeopleSummaryCCN[0]));
+	}
+	
+	private List<String> extractFullname(Set<People> ppl){
+		List<String> fullnames = new ArrayList<>();
+		for(People p: ppl) {
+			fullnames.add(p.getFirstname() + " " + p.getLastname());
+		}
+		return fullnames;
+	}
+
+	private Map<String, Set<People>> indexPeopleByColor(List<People> ppl) {
+		Map<String, Set<People>> pplColorIndex = new HashMap<>();
+		for(People p: ppl) {
+			Set<People> sameColorPpl = pplColorIndex.get(p.getColor());
+			if(sameColorPpl == null) {
+				sameColorPpl = new HashSet<People>();
+				pplColorIndex.put(p.getColor(), sameColorPpl);
+			}
+			sameColorPpl.add(p);
+		}
+		return pplColorIndex;
+	}
+	
 	public static void main(String[] args) {
 
 		Scanner sc = new Scanner(System.in);
@@ -89,7 +193,12 @@ public class PeopleParser {
 			}
 			
 			logger.info("Finished parsing {} people objects out of {} lines", parsedPeople.size(), rowCount);
-			System.out.println(parsedPeople);
+
+			pp.printPeopleAssignment4(parsedPeople);
+			pp.printPeopleAssignment5(parsedPeople);
+			pp.printPeopleAssignment6(parsedPeople);
+			
+			System.out.println();
 			listReader.close();
 			
 		} catch (IOException e) {
