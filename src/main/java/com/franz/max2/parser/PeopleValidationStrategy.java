@@ -5,6 +5,12 @@ import java.util.List;
 
 import com.franz.max2.model.People;
 
+/**
+ * A single strategy holds all column validator for a row. Order, number
+ * , and type of PeopleColumnValidator can be formulated to form different strategies
+ * @author Franz
+ *
+ */
 public class PeopleValidationStrategy {
 
 	private List<PeopleColumnValidator> pcvList = new ArrayList<>();

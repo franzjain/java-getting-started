@@ -1,5 +1,10 @@
 package com.franz.max2.model;
 
+/**
+ * Response type of PeopleSummary for Assignment Part I - Question 6 of q5
+ * @author Franz
+ *
+ */
 public class PeopleSummaryCCN {
 
 	private String color;

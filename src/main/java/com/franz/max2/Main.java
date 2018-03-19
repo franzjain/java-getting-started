@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example;
+package com.franz.max2;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -48,7 +48,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.franz.max2.model.FourSQResponse;
-import com.franz.max2.parser.PeopleParser;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.ObjectMapper;
@@ -56,14 +55,16 @@ import com.mashape.unirest.http.Unirest;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
+/**
+ * Main class of SpringBoot web service
+ * @author Franz
+ *
+ */
 @Controller
 @SpringBootApplication
 @ComponentScan("com.franz.max2.parser")
 public class Main {
 	
-	@Autowired
-	private PeopleParser pp;
-
 	@Value("${spring.datasource.url}")
 	private String dbUrl;
 
@@ -80,11 +81,6 @@ public class Main {
 
 	public static void main(String[] args) throws Exception {
 		SpringApplication.run(Main.class, args);
-	}
-
-	@RequestMapping("/")
-	String index() {
-		return "index";
 	}
 
 	@RequestMapping("/db")
@@ -119,6 +115,12 @@ public class Main {
 		}
 	}
 
+	/**
+	 * Assignment Part II
+	 * @param query
+	 * @param limit
+	 * @return
+	 */
 	@RequestMapping("/search4sq")
 	@ResponseBody
 	public ResponseEntity<FourSQResponse> search4sq(@RequestParam(value="query") String query, @RequestParam(value="limit") int limit) {

@@ -1,5 +1,10 @@
 package com.franz.max2.model;
 
+/**
+ * Assignment Part I - Question 1
+ * @author Franz
+ *
+ */
 public class People {
 
 	private String firstname;

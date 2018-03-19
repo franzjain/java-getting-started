@@ -2,11 +2,29 @@ package com.franz.max2.parser;
 
 import com.franz.max2.model.People;
 
+/**
+ * Signature of each PeopleColumnValidator need to implement to validate all different kind of columns form input csv file
+ * <p>
+ * ex: Firstname, Lastname, address, Phone number ,color, Zipcode
+ * @author Franz
+ *
+ */
 public interface PeopleColumnValidator {
 
+	/**
+	 * If value argument is valid, use the value to initialize corresponding field of People object
+	 * @param value
+	 * @param p
+	 * @throws PCValidationFailure
+	 */
 	public void validateColumn(String value, People p) throws PCValidationFailure;
 }
 
+/**
+ * Validation rule -- Firstname can be composed only from alphabet characters, and at least one character long
+ * @author Franz
+ *
+ */
 class FirstnameColumnValidator implements PeopleColumnValidator {
 
 	@Override
@@ -26,6 +44,12 @@ class FirstnameColumnValidator implements PeopleColumnValidator {
 	}
 }
 
+/**
+ * Validation rule -- Full name can be composed only from alphabet characters, Firstname and Lastname are separated by a space, 
+ * and each part at least one character long
+ * @author Franz
+ *
+ */
 class FullnameColumnValidator implements PeopleColumnValidator {
 
 	@Override
@@ -47,6 +71,11 @@ class FullnameColumnValidator implements PeopleColumnValidator {
 	}
 }
 
+/**
+ * Validation rule -- Lastname can be composed only from alphabet characters, and at least one character long
+ * @author Franz
+ *
+ */
 class LastnameColumnValidator implements PeopleColumnValidator {
 
 	@Override
@@ -66,6 +95,11 @@ class LastnameColumnValidator implements PeopleColumnValidator {
 	}
 }
 
+/**
+ * Validation rule -- Phone number has 3 parts, each with optional (), [], or - characters delimiter in between
+ * @author Franz
+ *
+ */
 class PhoneNumColumnValidator implements PeopleColumnValidator {
 
 	@Override
@@ -86,6 +120,11 @@ class PhoneNumColumnValidator implements PeopleColumnValidator {
 
 }
 
+/**
+ * Validation rule -- Color can be composed only from alphabet characters, and at least one character long
+ * @author Franz
+ *
+ */
 class ColorColumnValidator implements PeopleColumnValidator {
 
 	@Override
@@ -106,6 +145,11 @@ class ColorColumnValidator implements PeopleColumnValidator {
 
 }
 
+/**
+ * Validation rule -- Zipcode has 5 digits and trailing optional '-' character and 4 other digits
+ * @author Franz
+ *
+ */
 class ZipcodeColumnValidator implements PeopleColumnValidator {
 
 	@Override
@@ -126,6 +170,11 @@ class ZipcodeColumnValidator implements PeopleColumnValidator {
 
 }
 
+/**
+ * Validation rule -- Address has at least 2 parts delimited by space, and first part must be house number
+ * @author Franz
+ *
+ */
 class AddressColumnValidator implements PeopleColumnValidator {
 
 	@Override

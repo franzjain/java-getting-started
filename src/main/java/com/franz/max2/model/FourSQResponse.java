@@ -1,5 +1,10 @@
 package com.franz.max2.model;
 
+/**
+ * Response type of Foursquare facade service
+ * @author Franz
+ *
+ */
 public class FourSQResponse {
 
 	private String[] places;

@@ -1,14 +1,11 @@
 package com.franz.max2.parser;
 
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Scanner;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
@@ -16,9 +13,6 @@ import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.supercsv.io.CsvListReader;
-import org.supercsv.io.ICsvListReader;
-import org.supercsv.prefs.CsvPreference;
 
 import com.franz.max2.model.People;
 import com.franz.max2.model.PeopleSummaryCC;
@@ -26,17 +20,29 @@ import com.franz.max2.model.PeopleSummaryCCN;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+/**
+ * Holder of multiple validation strategy and entry point to validate People raw data 
+ * @author Franz
+ *
+ */
 @Component
 public class PeopleParser {
 	
 	private static Logger logger = LoggerFactory.getLogger(PeopleParser.class);
 
+	/**
+	 * Start of Strategy Chain
+	 */
 	private PeopleValidationStrategy pvs;
 	
 	public People validate(List<String> values) throws PCValidationFailure {
+		logger.info("Start validating {}", values);
 		return this.pvs.validate(values);
 	}
 	
+	/**
+	 * Initialize four Strategy objects to parse raw data having four possible mixed column orders
+	 */
 	@PostConstruct
 	public void init() {
 		PeopleValidationStrategy pvs1 = new PeopleValidationStrategy();
@@ -70,53 +76,11 @@ public class PeopleParser {
 		this.pvs = pvs1;
 	}
 	
-	public void printPeopleAssignment4(List<People> ppl) {
-		Map<String, Set<People>> pplColorIndex = indexPeopleByColor(ppl);
-		
-		System.out.println();
-		System.out.println("===================================================================================");
-		System.out.println("Result of Assignment 4");
-		System.out.println("===================================================================================");
-		System.out.println();
-		
-		for(Entry<String, Set<People>> entry: pplColorIndex.entrySet()) {
-			System.out.println(String.format("%-8s  %3s", entry.getKey(), entry.getValue().size()));
-		}
-	}
-	
-	public void printPeopleAssignment5(List<People> ppl) {
-		Map<String, Set<People>> pplColorIndex = indexPeopleByColor(ppl);
-		
-		System.out.println();
-		System.out.println("===================================================================================");
-		System.out.println("Result of Assignment 5");
-		System.out.println("===================================================================================");
-		System.out.println();
-		
-		for(Entry<String, Set<People>> entry: pplColorIndex.entrySet()) {
-			System.out.println(String.format("%-8s  %3s  %s", entry.getKey(), entry.getValue().size(), extractFullname(entry.getValue())));
-		}
-	}
-	
-	public void printPeopleAssignment6(List<People> ppl) {
-		
-		System.out.println();
-		System.out.println("===================================================================================");
-		System.out.println("Result of Assignment 6 - question4 reply in Json");
-		System.out.println("===================================================================================");
-		System.out.println();
-		
-		System.out.println(this.getPeopleSummaryCCJSON(ppl));
-		
-		System.out.println();
-		System.out.println("===================================================================================");
-		System.out.println("Result of Assignment 6 - question5 reply in Json");
-		System.out.println("===================================================================================");
-		System.out.println();
-		
-		System.out.println(this.getPeopleSummaryCCNJSON(ppl));
-	}
-	
+	/**
+	 * Convert People data to Json format for Assignment Part I q4
+	 * @param ppl
+	 * @return
+	 */
 	public String getPeopleSummaryCCJSON(List<People> ppl) {
 		Map<String, Set<People>> indexedPpl = this.indexPeopleByColor(ppl);
 		List<PeopleSummaryCC> ccList = new ArrayList<>();
@@ -130,6 +94,11 @@ public class PeopleParser {
 		return gson.toJson(ccList.toArray(new PeopleSummaryCC[0]));
 	}
 	
+	/**
+	 * Convert People data to Json format for Assignment Part I q5
+	 * @param ppl
+	 * @return
+	 */
 	public String getPeopleSummaryCCNJSON(List<People> ppl) {
 		Map<String, Set<People>> indexedPpl = this.indexPeopleByColor(ppl);
 		List<PeopleSummaryCCN> ccnList = new ArrayList<>();
@@ -144,7 +113,7 @@ public class PeopleParser {
 		return gson.toJson(ccnList.toArray(new PeopleSummaryCCN[0]));
 	}
 	
-	private List<String> extractFullname(Set<People> ppl){
+	List<String> extractFullname(Set<People> ppl){
 		List<String> fullnames = new ArrayList<>();
 		for(People p: ppl) {
 			fullnames.add(p.getFirstname() + " " + p.getLastname());
@@ -152,7 +121,7 @@ public class PeopleParser {
 		return fullnames;
 	}
 
-	private Map<String, Set<People>> indexPeopleByColor(List<People> ppl) {
+	Map<String, Set<People>> indexPeopleByColor(List<People> ppl) {
 		Map<String, Set<People>> pplColorIndex = new HashMap<>();
 		for(People p: ppl) {
 			Set<People> sameColorPpl = pplColorIndex.get(p.getColor());
@@ -164,51 +133,4 @@ public class PeopleParser {
 		}
 		return pplColorIndex;
 	}
-	
-	public static void main(String[] args) {
-
-		Scanner sc = new Scanner(System.in);
-		
-		PeopleParser pp = new PeopleParser();
-		pp.init();
-		
-		System.out.println("Please enter csv file path");
-		
-		try {
-			ICsvListReader listReader = new CsvListReader(new FileReader(sc.nextLine()), CsvPreference.STANDARD_PREFERENCE);
-			
-			List<People> parsedPeople = new ArrayList<>();
-			List<String> currentRow;
-			int rowCount = 0;
-			while((currentRow = listReader.read()) != null) {
-				rowCount++;
-				try {
-					parsedPeople.add(pp.validate(currentRow));
-				} catch (PCValidationFailure e) {
-					logger.warn("Unable to parse following data with all available strategies");
-					logger.warn("Data with error -> {}", currentRow);
-				} catch (Exception e) {
-					logger.error("Encountered error while parsing file", e);
-				} 
-			}
-			
-			logger.info("Finished parsing {} people objects out of {} lines", parsedPeople.size(), rowCount);
-
-			pp.printPeopleAssignment4(parsedPeople);
-			pp.printPeopleAssignment5(parsedPeople);
-			pp.printPeopleAssignment6(parsedPeople);
-			
-			System.out.println();
-			listReader.close();
-			
-		} catch (IOException e) {
-			logger.error("Encountered error while parsing file", e);
-		} finally {
-			sc.close();
-		}
-
-	}
-	
-	
-
 }
