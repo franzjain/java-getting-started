@@ -1,10 +1,14 @@
 package com.franz.max2.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 /**
  * Response type of PeopleSummary for Assignment Part I - Question 6 of q5
  * @author Franz
  *
  */
+@JsonInclude(Include.NON_NULL)
 public class PeopleSummaryCCN {
 
 	private String color;

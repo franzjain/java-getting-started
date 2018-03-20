@@ -17,6 +17,12 @@ public class PeopleValidationStrategy {
 	
 	private PeopleValidationStrategy nextStrategy;
 	
+	/**
+	 * Validate all attributes of a single person by sequence defined in List<PeopleColumnValidator> pcvList
+	 * @param values
+	 * @return
+	 * @throws PCValidationFailure
+	 */
 	public People validate(List<String> values) throws PCValidationFailure {
 		People p = new People();
 		try {

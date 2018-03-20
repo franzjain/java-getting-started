@@ -17,17 +17,12 @@
 package com.franz.max2;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.sql.DataSource;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -37,23 +32,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.franz.max2.dao.PeopleDAO;
 import com.franz.max2.model.FourSQResponse;
+import com.franz.max2.model.People;
+import com.franz.max2.model.PeoplePostResponse;
+import com.franz.max2.parser.PCValidationFailure;
+import com.franz.max2.parser.PeopleParser;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 
 /**
  * Main class of SpringBoot web service
@@ -62,14 +61,12 @@ import com.zaxxer.hikari.HikariDataSource;
  */
 @Controller
 @SpringBootApplication
-@ComponentScan("com.franz.max2.parser")
+@ComponentScan("com.franz.max2")
 public class Main {
 	
-	@Value("${spring.datasource.url}")
-	private String dbUrl;
-
+	
 	@Autowired
-	private DataSource dataSource;
+	private PeopleDAO pDAO;
 	
 	@Value("${client.id}")
 	private String clientId;
@@ -77,43 +74,35 @@ public class Main {
 	@Value("${client.secret}")
 	private String clientSecret;
 	
+	@Autowired
+	private PeopleParser pp;
+	
 	private Logger logger = LoggerFactory.getLogger(Main.class);
 
 	public static void main(String[] args) throws Exception {
 		SpringApplication.run(Main.class, args);
 	}
 
-	@RequestMapping("/db")
-	String db(Map<String, Object> model) {
-		try (Connection connection = dataSource.getConnection()) {
-			Statement stmt = connection.createStatement();
-			stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ticks (tick timestamp)");
-			stmt.executeUpdate("INSERT INTO ticks VALUES (now())");
-			ResultSet rs = stmt.executeQuery("SELECT tick FROM ticks");
-
-			ArrayList<String> output = new ArrayList<String>();
-			while (rs.next()) {
-				output.add("Read from DB: " + rs.getTimestamp("tick"));
-			}
-
-			model.put("records", output);
-			return "db";
-		} catch (Exception e) {
-			model.put("message", e.getMessage());
-			return "error";
-		}
-	}
-
-	@Bean
-	public DataSource dataSource() throws SQLException {
-		if (dbUrl == null || dbUrl.isEmpty()) {
-			return new HikariDataSource();
-		} else {
-			HikariConfig config = new HikariConfig();
-			config.setJdbcUrl(dbUrl);
-			return new HikariDataSource(config);
-		}
-	}
+//	@RequestMapping("/db")
+//	String db(Map<String, Object> model) {
+//		try (Connection connection = dataSource.getConnection()) {
+//			Statement stmt = connection.createStatement();
+//			stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ticks (tick timestamp)");
+//			stmt.executeUpdate("INSERT INTO ticks VALUES (now())");
+//			ResultSet rs = stmt.executeQuery("SELECT tick FROM ticks");
+//
+//			ArrayList<String> output = new ArrayList<String>();
+//			while (rs.next()) {
+//				output.add("Read from DB: " + rs.getTimestamp("tick"));
+//			}
+//
+//			model.put("records", output);
+//			return "db";
+//		} catch (Exception e) {
+//			model.put("message", e.getMessage());
+//			return "error";
+//		}
+//	}
 
 	/**
 	 * Assignment Part II
@@ -148,6 +137,29 @@ public class Main {
 			FourSQResponse result = new FourSQResponse();
 			result.setErrorMessage(e.getMessage());
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+	}
+	
+	@RequestMapping(value = "/people", method = RequestMethod.POST, consumes = "text/plain")
+	public ResponseEntity<PeoplePostResponse> createPeople(@RequestBody String payload){
+		String[] pplAttributes = payload.trim().split("\\s*,\\s*");
+		PeoplePostResponse ppr = new PeoplePostResponse();
+		try {
+			People p = pp.validate(Arrays.asList(pplAttributes));
+			int id = this.pDAO.createPeople(p);
+			ppr.setStatusCode(200);
+			ppr.setId(id);
+			return new ResponseEntity<>(ppr, HttpStatus.OK);
+		} catch (PCValidationFailure e) {
+			logger.warn("Validation of incoming data failed: {}", payload);
+			ppr.setStatusCode(400);
+			ppr.setErrorMessage("Validation failed: " + payload);
+			return new ResponseEntity<>(ppr, HttpStatus.BAD_REQUEST);
+		} catch (Exception e) {
+			logger.warn("Validation of incoming data failed: {}", payload);
+			ppr.setStatusCode(400);
+			ppr.setErrorMessage("Found error: " + e.getMessage());
+			return new ResponseEntity<>(ppr, HttpStatus.BAD_REQUEST);
 		}
 	}
 

@@ -4,31 +4,35 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 /**
- * Response type of Foursquare facade service
+ * Response object of people POST API
  * @author Franz
  *
  */
 @JsonInclude(Include.NON_NULL)
-public class FourSQResponse {
+public class PeoplePostResponse {
 
-	private String[] places;
-	
+	private int id;
+	private int statusCode;
 	private String errorMessage;
-
-	public String[] getPlaces() {
-		return places;
+	
+	public int getId() {
+		return id;
 	}
-
-	public void setPlaces(String[] places) {
-		this.places = places;
+	public void setId(int id) {
+		this.id = id;
 	}
-
+	public int getStatusCode() {
+		return statusCode;
+	}
+	public void setStatusCode(int statusCode) {
+		this.statusCode = statusCode;
+	}
 	public String getErrorMessage() {
 		return errorMessage;
 	}
-
 	public void setErrorMessage(String errorMessage) {
 		this.errorMessage = errorMessage;
 	}
+	
 	
 }
