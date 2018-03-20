@@ -13,19 +13,20 @@ import org.springframework.stereotype.Repository;
 
 import com.franz.max2.model.People;
 
+/**
+ * Data Access Object for People data in persistence layer
+ * @author Franz
+ *
+ */
 @Repository
 public class JdbcPeopleDAOImpl implements PeopleDAO {
 
 	private JdbcTemplate jdbcTemplate;
 	
-	
-	
-
 	@Autowired
 	public void setDataSource(DataSource dataSource) {
 		this.jdbcTemplate = new JdbcTemplate(dataSource);
 	}
-	
 	
 	@Override
 	public int createPeople(People p) {

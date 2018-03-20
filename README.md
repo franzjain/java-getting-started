@@ -13,4 +13,7 @@ Foursquare search API facade was deployed to following url, query and limit para
 https://infinite-woodland-62172.herokuapp.com/search4sq?query=shoe&limit=10
 
 ## Assignment Part III
-Ran out of time...
+
+The post method can be invoked with following syntax
+
+curl -X POST --data "Duck, Donald, (703)-742-0996, Golden, 99999" 'https://infinite-woodland-62172.herokuapp.com/people' -H "Content-Type: text/plain"
